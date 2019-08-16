@@ -30,7 +30,7 @@ describe('test Nightwatch Api', function() {
       },
       session: {
         commandQueue: {
-          add(commandName, command, context, args, originalStackTrace) {
+          add({commandName, commandFn, context, args, stackTrace}) {
             assert.equal(commandName, 'customAssertion');
             assert.equal(args.length, 1);
             assert.strictEqual(args[0], true);
@@ -105,7 +105,7 @@ describe('test Nightwatch Api', function() {
     }, /ENOENT: no such file or directory, scandir '/);
   });
 
-  it('testRunCustomPerformCommand', function(done) {
+  it('test run customPerform command', function(done) {
     const ApiLoader = common.require('api-loader/api.js');
     let mockClient = {
       options: {
@@ -113,9 +113,9 @@ describe('test Nightwatch Api', function() {
       },
       session: {
         commandQueue: {
-          add(commandName, command, context, args, originalStackTrace) {
-            let instance = command.apply(context, args);
-            if (commandName == 'customPerform') {
+          add({commandName, commandFn, context, args, stackTrace}) {
+            let instance = commandFn.apply(context, args);
+            if (commandName === 'customPerform') {
               instance.on('complete', () => {
                 assert.strictEqual(paramFnCalled, true);
                 done();
@@ -137,8 +137,18 @@ describe('test Nightwatch Api', function() {
       isApiMethodDefined: function (commandName, namespace) {
         return false;
       },
-      setApiMethod: function (commandName, commandFn) {
-        mockClient.api[commandName] = commandFn;
+      setApiMethod: function (commandName, ...args) {
+        if (args.length === 1) {
+          mockClient.api[commandName] = args[0];
+        } else {
+          let context = mockClient.api;
+          let namespace = typeof args[0] == 'string' ? context[args[0]] : args[0];
+          if (namespace) {
+            context = namespace;
+          }
+
+          context[commandName] = args[1];
+        }
       },
       transport: {
         Actions: {}
@@ -152,9 +162,12 @@ describe('test Nightwatch Api', function() {
     mockClient.api.customPerform(function() {
       paramFnCalled = true;
     });
+
+    assert.ok('other' in mockClient.api);
+    assert.strictEqual(typeof mockClient.api.other.otherCommand, 'function');
   });
 
-  it('testRunCustomCommandDeprecated', function(done) {
+  it('test run custom command deprecated', function(done) {
     let commandQueue = [];
     const ApiLoader = common.require('api-loader/api.js');
     let mockClient = {
@@ -163,11 +176,11 @@ describe('test Nightwatch Api', function() {
       },
       session: {
         commandQueue: {
-          add(commandName, command, context, args, originalStackTrace) {
+          add({commandName, commandFn, context, args, stackTrace}) {
             commandQueue.push(commandName);
-            let instance = command.apply(context, args);
+            let instance = commandFn.apply(context, args);
 
-            if (commandName == 'customCommand') {
+            if (commandName === 'customCommand') {
               assert.equal(instance.toString(), 'CommandInstance [name=customCommand]');
             }
           }
@@ -200,29 +213,6 @@ describe('test Nightwatch Api', function() {
 
     mockClient.api.customCommand(function() {
       assert.deepEqual(commandQueue, ['customCommand', 'perform']);
-      done();
-    });
-  });
-
-  it('testRunElementCommand', function(done) {
-    const MockSession = require('../../lib/mocks/core/session.js');
-    mockery.registerMock('./core/session.js', MockSession);
-
-    MockServer.addMock({
-      url : '/wd/hub/session/1352110219202/element/0/value',
-      method:'POST',
-      postdata : '{"value":["1"]}',
-      response : JSON.stringify({
-        sessionId: '1352110219202',
-        status:0
-      })
-    });
-
-    const Nightwatch = require('../../lib/nightwatch.js');
-    let client = Nightwatch.createClient();
-
-    client.api.setValue('#weblogin', '1', function (result) {
-      assert.strictEqual(result.status, 0);
       done();
     });
   });
@@ -260,6 +250,7 @@ describe('test Nightwatch Api', function() {
       options: {
         page_objects_path: [path.join(__dirname, '../../extra/otherPageobjects')]
       },
+      settings: {},
       session: {},
       api: {
         perform(fn) {
@@ -288,6 +279,11 @@ describe('test Nightwatch Api', function() {
 
     assert.ok(typeof mockClient.api.page == 'object');
     assert.ok('otherPage' in mockClient.api.page);
+
+    assert.throws(function() {
+      mockClient.api.page.otherPage().navigate();
+    }, /Error: Invalid URL in "otherPage" page object. When using relative uris, you must define a "launch_url" setting in your config which serves as the base url./);
+
   });
 
 });

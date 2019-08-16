@@ -3,12 +3,6 @@ const Nocks = require('../../../lib/nocks.js');
 const ExpectGlobals = require('../../../lib/globals/expect.js');
 
 describe('expect.attribute', function() {
-  before(function() {
-    try {
-      Nocks.enable(true);
-    } catch (e) {}
-  });
-
   beforeEach(function(done) {
     ExpectGlobals.beforeEach.call(this, () => {
       this.client.api.globals.abortOnAssertionFailure = true;
@@ -264,6 +258,50 @@ describe('expect.attribute', function() {
     this.client.start(done);
   });
 
+  it('to have attribute which startsWith [PASSED]', function(done) {
+    Nocks.elementFound().attributeValue('hp vasq');
+    let expect = this.client.api.expect.element('#weblogin').to.have.attribute('class').which.startsWith('hp');
+    this.client.api.perform(function() {
+      assert.equal(expect.assertion.passed, true);
+      assert.ok(expect.assertion.message.startsWith('Expected element <#weblogin> to have attribute "class" which starts with: "hp"'), 'Failed: ' + expect.assertion.message);
+    });
+
+    this.client.start(done);
+  });
+
+  it('to have attribute startWith [PASSED]', function(done) {
+    Nocks.elementFound().attributeValue('hp vasq');
+    let expect = this.client.api.expect.element('#weblogin').to.have.attribute('class').startWith('hp');
+    this.client.api.perform(function() {
+      assert.equal(expect.assertion.passed, true);
+      assert.ok(expect.assertion.message.startsWith('Expected element <#weblogin> to have attribute "class" start with: "hp"'), 'Failed: ' + expect.assertion.message);
+    });
+
+    this.client.start(done);
+  });
+
+  it('to have attribute which endsWith [PASSED]', function(done) {
+    Nocks.elementFound().attributeValue('hp vasq');
+    let expect = this.client.api.expect.element('#weblogin').to.have.attribute('class').which.endsWith('vasq');
+    this.client.api.perform(function() {
+      assert.equal(expect.assertion.passed, true);
+      assert.ok(expect.assertion.message.startsWith('Expected element <#weblogin> to have attribute "class" which ends with: "vasq"'), 'Failed: ' + expect.assertion.message);
+    });
+
+    this.client.start(done);
+  });
+
+  it('to have attribute endsWith [PASSED]', function(done) {
+    Nocks.elementFound().attributeValue('hp vasq');
+    let expect = this.client.api.expect.element('#weblogin').to.have.attribute('class').endsWith('vasq');
+    this.client.api.perform(function() {
+      assert.equal(expect.assertion.passed, true);
+      assert.ok(expect.assertion.message.startsWith('Expected element <#weblogin> to have attribute "class" end with: "vasq"'), 'Failed: ' + expect.assertion.message);
+    });
+
+    this.client.start(done);
+  });
+
   it('to have attribute equal to [FAILED]', function() {
     this.client.api.globals.waitForConditionTimeout = 40;
     this.client.api.globals.waitForConditionPollInterval = 20;
@@ -485,6 +523,44 @@ describe('expect.attribute', function() {
     this.client.start(done);
   });
 
+  it('to have attribute not startsWith [PASSED]', function(done) {
+    Nocks.elementFound().attributeValue('xx');
+
+    let expect = this.client.api.expect.element('#weblogin').to.have.attribute('class').not.startsWith('vasq');
+
+    assert.equal(expect.assertion.message, 'Expected element <%s> to have attribute "class"');
+    this.client.api.perform(function() {
+      assert.equal(expect.assertion.expected, 'not start with \'vasq\'');
+      assert.equal(expect.assertion.actual, 'xx');
+      assert.equal(expect.assertion.negate, true);
+      assert.equal(expect.assertion.resultValue, 'xx');
+      assert.equal(expect.assertion.passed, true);
+      assert.equal(expect.assertion.messageParts[0], ' not start with: "vasq"');
+      assert.ok(expect.assertion.message.startsWith('Expected element <#weblogin> to have attribute "class" not start with: "vasq"'));
+    });
+
+    this.client.start(done);
+  });
+
+  it('to have attribute not endsWith [PASSED]', function(done) {
+    Nocks.elementFound().attributeValue('xx');
+
+    let expect = this.client.api.expect.element('#weblogin').to.have.attribute('class').not.endsWith('vasq');
+
+    assert.equal(expect.assertion.message, 'Expected element <%s> to have attribute "class"');
+    this.client.api.perform(function() {
+      assert.equal(expect.assertion.expected, 'not end with \'vasq\'');
+      assert.equal(expect.assertion.actual, 'xx');
+      assert.equal(expect.assertion.negate, true);
+      assert.equal(expect.assertion.resultValue, 'xx');
+      assert.equal(expect.assertion.passed, true);
+      assert.equal(expect.assertion.messageParts[0], ' not end with: "vasq"');
+      assert.ok(expect.assertion.message.startsWith('Expected element <#weblogin> to have attribute "class" not end with: "vasq"'));
+    });
+
+    this.client.start(done);
+  });
+
   it('to have attribute which contains [PASSED]', function(done) {
     Nocks.elementFound().attributeValue('vasq');
 
@@ -527,6 +603,56 @@ describe('expect.attribute', function() {
       assert.equal(expect.assertion.passed, false);
       assert.equal(expect.assertion.messageParts[0], ' not contain: "xx"' );
       assert.equal(expect.assertion.message, 'Expected element <#weblogin> to have attribute "class" not contain: "xx"');
+    });
+  });
+
+  it('to have attribute not startsWith [FAILED]', function() {
+    Nocks.elementFound()
+      .attributeValue('xx')
+      .attributeValue('xx')
+      .attributeValue('xx')
+      .attributeValue('xx');
+
+    this.client.api.globals.waitForConditionTimeout = 40;
+    this.client.api.globals.waitForConditionPollInterval = 20;
+
+    let expect = this.client.api.expect.element('#weblogin').to.have.attribute('class').not.startsWith('xx');
+    assert.equal(expect.assertion.message, 'Expected element <%s> to have attribute "class"');
+
+    return this.client.start(function(err) {
+      assert.ok(err instanceof Error);
+      assert.equal(expect.assertion.expected, 'not start with \'xx\'');
+      assert.equal(expect.assertion.actual, 'xx');
+      assert.equal(expect.assertion.negate, true);
+      assert.equal(expect.assertion.resultValue, 'xx');
+      assert.equal(expect.assertion.passed, false);
+      assert.equal(expect.assertion.messageParts[0], ' not start with: "xx"' );
+      assert.equal(expect.assertion.message, 'Expected element <#weblogin> to have attribute "class" not start with: "xx"');
+    });
+  });
+
+  it('to have attribute not endsWith [FAILED]', function() {
+    Nocks.elementFound()
+      .attributeValue('xx')
+      .attributeValue('xx')
+      .attributeValue('xx')
+      .attributeValue('xx');
+
+    this.client.api.globals.waitForConditionTimeout = 40;
+    this.client.api.globals.waitForConditionPollInterval = 20;
+
+    let expect = this.client.api.expect.element('#weblogin').to.have.attribute('class').not.endsWith('xx');
+    assert.equal(expect.assertion.message, 'Expected element <%s> to have attribute "class"');
+
+    return this.client.start(function(err) {
+      assert.ok(err instanceof Error);
+      assert.equal(expect.assertion.expected, 'not end with \'xx\'');
+      assert.equal(expect.assertion.actual, 'xx');
+      assert.equal(expect.assertion.negate, true);
+      assert.equal(expect.assertion.resultValue, 'xx');
+      assert.equal(expect.assertion.passed, false);
+      assert.equal(expect.assertion.messageParts[0], ' not end with: "xx"' );
+      assert.equal(expect.assertion.message, 'Expected element <#weblogin> to have attribute "class" not end with: "xx"');
     });
   });
 
@@ -637,6 +763,42 @@ describe('expect.attribute', function() {
     });
   });
 
+  it('to have attribute startsWith - element not found', function() {
+    this.client.api.globals.waitForConditionTimeout = 40;
+    this.client.api.globals.waitForConditionPollInterval = 20;
+
+    Nocks.elementNotFound().elementNotFound().elementNotFound();
+
+    let expect = this.client.api.expect.element('#weblogin').to.have.attribute('class').which.startsWith('vas');
+
+    return this.client.start(function(err) {
+      assert.equal(expect.assertion.expected, 'present');
+      assert.equal(expect.assertion.actual, 'not present');
+      assert.equal(expect.assertion.passed, false);
+      assert.equal(expect.assertion.messageParts[0], ' which ');
+      assert.equal(expect.assertion.messageParts[1], 'starts with: "vas"');
+      assert.equal(expect.assertion.message, 'Expected element <#weblogin> to have attribute "class" which starts with: "vas" - element was not found');
+    });
+  });
+
+  it('to have attribute endsWith - element not found', function() {
+    this.client.api.globals.waitForConditionTimeout = 40;
+    this.client.api.globals.waitForConditionPollInterval = 20;
+
+    Nocks.elementNotFound().elementNotFound().elementNotFound();
+
+    let expect = this.client.api.expect.element('#weblogin').to.have.attribute('class').which.endsWith('sq');
+
+    return this.client.start(function(err) {
+      assert.equal(expect.assertion.expected, 'present');
+      assert.equal(expect.assertion.actual, 'not present');
+      assert.equal(expect.assertion.passed, false);
+      assert.equal(expect.assertion.messageParts[0], ' which ');
+      assert.equal(expect.assertion.messageParts[1], 'ends with: "sq"');
+      assert.equal(expect.assertion.message, 'Expected element <#weblogin> to have attribute "class" which ends with: "sq" - element was not found');
+    });
+  });
+
   it('to have attribute match - element not found', function() {
     this.client.api.globals.waitForConditionTimeout = 40;
     this.client.api.globals.waitForConditionPollInterval = 20;
@@ -715,14 +877,17 @@ describe('expect.attribute', function() {
     this.client.start(done);
   });
 
-  it('to have attribute match - throws exception on invalid regex', function(done) {
+  it('to have attribute match - throws exception on invalid regex', function() {
     Nocks.elementFound().attributeValue('xx');
-
+    let expectedError;
     let expect = this.client.api.expect.element('#weblogin').to.have.attribute('class');
-    assert.throws(function() {
+    try {
       expect.which.matches('');
-    }, /Error: matches requires first paramter to be a RegExp\. string given/);
+    } catch (err) {
+      expectedError = err;
+    }
 
-    this.client.start(done);
+    assert.ok(expectedError instanceof Error);
+    assert.strictEqual(expectedError.message, 'matches requires first paramter to be a RegExp. string given.');
   });
 });

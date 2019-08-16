@@ -9,6 +9,8 @@ describe('test Parallel Execution', function() {
   const allArgs = [];
   const allOpts = [];
 
+  this.timeout(5000);
+
   beforeEach(function() {
     mockery.enable({useCleanCache: true, warnOnUnregistered: false});
     mockery.registerMock('child_process', {
@@ -90,7 +92,7 @@ describe('test Parallel Execution', function() {
     assert.ok(runner.test_settings.test_workers);
 
     return runner.runTests().then(_ => {
-      assert.equal(allArgs.length, 25);
+      assert.strictEqual(allArgs.length, 32);
       assert.strictEqual(runner.concurrency.globalExitCode, 0);
     });
   });
@@ -132,7 +134,7 @@ describe('test Parallel Execution', function() {
     });
 
     return runner.runTests().then(_ => {
-      assert.equal(allArgs.length, 25);
+      assert.strictEqual(allArgs.length, 32);
     });
   });
 
@@ -161,7 +163,7 @@ describe('test Parallel Execution', function() {
     });
 
     return runner.runTests().then(_ => {
-      assert.equal(allArgs.length, 25);
+      assert.strictEqual(allArgs.length, 32);
     });
   });
 
@@ -177,7 +179,6 @@ describe('test Parallel Execution', function() {
   });
 
   it('test parallel execution with workers and single source file', function() {
-    const WebDriver = common.require('runner/webdriver-server.js');
     const CliRunner = common.require('runner/cli/cli.js');
     let runner = new CliRunner({
       config: path.join(__dirname, '../../../extra/parallelism.json'),
